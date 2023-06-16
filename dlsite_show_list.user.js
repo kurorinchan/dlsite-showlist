@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name        dlsite show list
-// @namespace   Violentmonkey Scripts
+// @namespace   https://github.com/kurorinchan/dlsite-showlist
 // @match       https://www.dlsite.com/*
 // @grant       none
 // @version     1.0
 // @author      kurorinchan
 // @run-at document-start
-// @description 6/16/2023, 12:45:27 PM
+// @description Show search results as list.
 // ==/UserScript==
 
 const path = window.location.pathname;
