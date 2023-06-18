@@ -3,7 +3,7 @@
 // @namespace   https://github.com/kurorinchan/dlsite-showlist
 // @match       https://www.dlsite.com/*
 // @grant       none
-// @version     1.0
+// @version     1.1
 // @author      kurorinchan
 // @run-at document-start
 // @description Show search results as list.
@@ -38,33 +38,81 @@ if (type == "work") {
   return;
 }
 
-const keyWords = [
-  "per_page", "show_type",
-]
-
-function hasTargetParameters(split) {
-  for (const word of keyWords) {
-    if (split.includes(word)) {
-      return true;
+function toParamaterPairs(pathSplit) {
+  let pairs = {}
+  const equalIndex = pathSplit.indexOf("=");
+  for (let i = equalIndex + 1; i < pathSplit.length; i += 2) {
+    const nextIndex = i + 1;
+    if (nextIndex >= pathSplit.length) {
+      // This is an error because its not ending with a pair. But return
+      // processed pairs.
+      console.error(`Failed to process ${pathSplit[i]}.`)
+      return pairs;
     }
+    pairs[pathSplit[i]] = pathSplit[nextIndex];
   }
-  return false;
+  return pairs;
 }
 
-if (hasTargetParameters(pathSplit)) {
+let parameterPairs = toParamaterPairs(pathSplit);
+
+// This function could modify the input parameter.
+function needsUrlChange(paramPairs) {
+  const from = paramPairs["from"];
+
+  // Special handling. from/fs.header means it's the results from the search
+  // bar at the top. This always show 30 results.
+  if (from == "fs.header") {
+    // Always remove this to prevent infinite redirect (loop).
+    // This deletion is here to not require deleting it elsewhere in the code
+    // (and prevent accidental removal of this line).
+    delete paramPairs["from"];
+    return true;
+  }
+
+  const keyWords = [
+    "per_page", "show_type",
+  ];
+
+  for (const word of keyWords) {
+    if (word in paramPairs) {
+      return false;
+    }
+  }
+  return true;
+}
+
+if (!needsUrlChange(parameterPairs)) {
   return;
 }
 
-const newPathParameters = ["per_page", "100", "show_type", "1"];
+parameterPairs["per_page"] = "100";
+parameterPairs["show_type"] = "1";
 
-// Try to insert the new parameters right after the "=" to keep it clean.
+function toParameterArray(pairs) {
+  let parameters = [];
+  for (const key in pairs) {
+    parameters.push(key);
+    parameters.push(pairs[key]);
+  }
+  return parameters;
+}
+
+const newParameterPairs = toParameterArray(parameterPairs);
 const newPathArray = pathSplit.slice(0, equalIndex + 1).concat(
-  newPathParameters).concat(
-    pathSplit.slice(equalIndex + 1))
+  newParameterPairs
+)
 
 const newURL  = window.location.protocol + "//"
   + window.location.host
-  + newPathArray.join('/');
+  + newPathArray.join('/')
+  + window.location.search
+  + window.location.hash;
+
+// Simple cross check to prevent infinite redirect.
+if (window.location.href == newURL) {
+  return;
+}
 
 console.log("rewriting url to " + newURL);
 document.location.replace(newURL);
