@@ -3,7 +3,7 @@
 // @namespace   https://github.com/kurorinchan/dlsite-showlist
 // @match       https://www.dlsite.com/*
 // @grant       none
-// @version     1.2
+// @version     1.3
 // @author      kurorinchan
 // @run-at document-start
 // @description Show search results as list.
@@ -65,7 +65,7 @@ function needsUrlChange(paramPairs) {
   // bar at the top. This always show 30 results.
   // fs.detail is from a banner.
   // So treat any from/fs.* as a special case.
-  if (from.startsWith("fs.")) {
+  if (typeof(from) == "string" && from.startsWith("fs.")) {
     // Always remove this to prevent infinite redirect (loop).
     // This deletion is here to not require deleting it elsewhere in the code
     // (and prevent accidental removal of this line).
